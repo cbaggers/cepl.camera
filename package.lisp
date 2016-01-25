@@ -29,4 +29,5 @@
   (:import-from :cl-game-math.vector4
                 :make-vector4)
   (:export :make-camera :viewport :perspective :in-space :near :far :fov
-	   :viewport :cam->clip :x->cam :using-camera))
+	   :viewport :cam->clip :x->cam :using-camera
+	   :camera-pos :camera-rot))
