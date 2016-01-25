@@ -1,138 +1,85 @@
 (in-package :cepl.camera)
 
-;;----------------------------------------------------------------------
-;; Generic api
-;;
-
-(defgeneric viewport (camera)) ;; should return a jungl:viewport
-(defgeneric cam->clip (camera)) ;; should return a mat4
-
-;;----------------------------------------------------------------------
-;; Space Cameras
-;;
-;; Cepl's default camera implementation. It hooks into the space system
-;; to provide better shader program experience if you are using the
-;; 'jungl:space type.
-
-;; Base - The base type for a camera that hooks into the space system
-;;        Note that is does not provide as position or rotation so it does
-;;        not handle calculating the world->camera transform. This let's you
-;;        take ownership of this if you prefer.
-;;
-
 ;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-;; Base
 
-(defstruct base-camera-common
-  (viewport (error "viewport must be supplied when making a camera")
-	    :type jungl:viewport)
-  (space (error "CEPL: Bug in cepl, space not provided when space-camera was created")
-	 :type space)
-  (in-space nil :type (or null space))
-  (near 1.0 :type single-float)
-  (far 1.0 :type single-float))
+(defvar *uids* -1)
 
-(defstruct (orthographic-base-camera (:include base-camera-common)))
+(defstruct (camera (:include base-camera)
+		   (:constructor %make-camera)
+		   (:conc-name %camera-))
+  (uid (incf *uids*) :type fixnum)
+  (pos (v! 0 0 0 0) :type cl-game-math.types:vec4)
+  (rot (q:identity-quat) :type cl-game-math.types:quaternion))
 
-(defstruct (perspective-base-camera (:include base-camera-common))
-  (fov 120.0 :type single-float))
+(defmethod print-object ((cam camera) stream)
+  (with-base-camera (perspective) cam
+    (format stream "#<CAMERA (~s) ~s>"
+	    (%camera-uid cam)
+	    (if perspective :perspective :ortho))))
 
-(defun make-base-camera (&key (viewport (jungl:current-viewport))
-			   (projection :perspective)
-			   (near 1.0)
-			   (far 1000.0)
-			   (fov 120.0))
-  (case projection
-    ((:perspective :p)
-     (make-perspective-base-camera :space (if in-space
-					      (space! *clip-space* in-space)
-					      (space! *clip-space*))
-				   :in-space nil
-				   :viewport viewport
-				   :near near
-				   :far far
-				   :fov fov))
-    ((:orthographic :ortho :o)
-     (make-orthographic-base-camera :space (if in-space
-					       (space! *clip-space* in-space)
-					       (space! *clip-space*))
-				    :in-space nil
-				    :viewport viewport
-				    :near near
-				    :far far))))
-
-(defmacro with-base-camera (slots cam &body body)
-
-  (assert (every (lambda (x) (member x '(viewport space near far fov in-space)))
-		 slots))
-  (labels ((get-base (x)
-	     (if (eq x 'fov) 'perspective-base-camera 'base-camera-common)))
-    `(symbol-macrolet
-	 ,(mapcar (lambda (x)
-		    `(,x '(,(utils:symb (get-base x) :- x) ,cam)))
-		  slots)
-       ,@body)))
-
-(defun set-base-cam->clip (base-camera)
-  (typecase base-camera
-    (orthographic-base-camera
-     (with-base-camera (viewport space near far) base-camera
-       (let ((frame (jungl:viewport-resolution-v! viewport)))
-	 (setf (get-transform space *clip-space*)
-	       (cl-game-math.projection:orthographic
-		(v:x frame) (v:y frame) near far)))))
-    (perspective-base-camera
-     (with-base-camera (viewport space near far fov) base-camera
-       (let ((frame (jungl:viewport-resolution-v! viewport)))
-	 (setf (get-transform space *clip-space*)
-	       (cl-game-math.projection:perspective
-		(v:x frame) (v:y frame) near far fov)))))))
-
-(defmethod viewport ((camera base-camera-common))
-  (base-camera-common-viewport camera))
-
-(defmethod cam->clip ((camera base-camera-common))
+(defun update-x->cam (camera)
   (with-base-camera (in-space space) camera
-    (if in-space
-	(get-transform in-space space)
-	(get-transform space))))
+    (setf (get-transform in-space space)
+	  (m4:m* (m4:translation (%camera-pos camera))
+		 (q:to-matrix4 (q:normalize (%camera-rot camera)))))))
 
-;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-
-(defstruct (orthographic-space-camera (:include orthographic-base-camera))
-  (pos (v! 0 0 0 0) :type cl-game-math.types:vec4)
-  (rot (q:identity-quat) :type cl-game-math.types:quaternion))
-
-(defstruct (perspective-space-camera (:include orthographic-base-camera))
-  (pos (v! 0 0 0 0) :type cl-game-math.types:vec4)
-  (rot (q:identity-quat) :type cl-game-math.types:quaternion))
-
-(defmethod print-object ((cam orthographic-space-camera) stream)
-  (format stream "#<CAMERA :ORTHO ~s>"))
-
-
-
-(defun make-camera (&key (viewport (jungl:current-viewport))
+(defun make-camera (&key
+		      (pos (v! 0 0 0 0))
+		      (rot (q:identity-quat))
+		      (viewport (jungl:current-viewport))
 		      (in-space *world-space*)
 		      (projection :perspective)
 		      (near 1.0)
 		      (far 1000.0)
 		      (fov 120.0))
-  (case projection
-    ((:perspective :p)
-     (make-perspective-base-camera :space (if in-space
-					      (space! *clip-space* in-space)
-					      (space! *clip-space*))
-				   :in-space in-space
-				   :viewport viewport
-				   :near near
-				   :far far
-				   :fov fov))
-    ((:orthographic :ortho :o)
-     (make-orthographic-base-camera :space (if in-space
-					       (space! *clip-space* in-space)
-					       (space! *clip-space*))
-				    :in-space in-space
-				    :viewport viewport
-				    :near near
-				    :far far))))
+  (unless in-space
+    (error "Cepl.Camera: Space is mandatory when constructing camera"))
+  (let ((cam (%make-camera :space (space! *clip-space* in-space)
+			   :perspective (ecase projection
+					  ((:perspective :p) t)
+					  ((:orthographic :ortho :o) nil))
+			   :in-space in-space
+			   :viewport viewport
+			   :near near
+			   :far far
+			   :fov fov
+			   :pos pos
+			   :rot rot)))
+    (update-x->cam cam)
+    (update-cam->clip cam)
+    cam))
+
+(defun camera-pos (camera)
+  (%camera-pos camera))
+
+(defun camera-rot (camera)
+  (%camera-rot camera))
+
+(defun (setf camera-pos) (value camera)
+  (setf (%camera-pos camera) value)
+  (update-x->cam camera)
+  (update-cam->clip camera)
+  value)
+
+(defun (setf camera-rot) (value camera)
+  (setf (%camera-rot camera) value)
+  (update-x->cam camera)
+  (update-cam->clip camera)
+  value)
+
+(defmacro using-camera (camera &body body)
+  (destructuring-bind (camera &key (safe t))
+      (cepl-utils:listify camera)
+    (let ((space (gensym "space"))
+	  (cam (gensym "cam")))
+      `(let ((,cam ,camera))
+	 ,@(when safe
+		 `((unless (typep ,cam 'camera)
+		     (error "Cannot render using this type as a camera: ~s" ,cam))))
+	 (let ((,space (cepl.camera.base::base-camera-space ,cam)))
+	   (with-rendering-via ,space
+	     ,@body))))))
+
+(defmethod x->cam ((camera camera))
+  (with-base-camera (space in-space) camera
+    (get-transform in-space space)))
