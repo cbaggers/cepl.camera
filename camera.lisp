@@ -8,8 +8,8 @@
 		   (:constructor %make-camera)
 		   (:conc-name %camera-))
   (uid (incf *uids*) :type fixnum)
-  (pos (v! 0 0 0 0) :type cl-game-math.types:vec4)
-  (rot (q:identity-quat) :type cl-game-math.types:quaternion))
+  (pos (v! 0 0 0 0) :type rtg-math.types:vec4)
+  (rot (q:identity-quat) :type rtg-math.types:quaternion))
 
 (defmethod print-object ((cam camera) stream)
   (with-base-camera (perspective) cam
@@ -20,13 +20,15 @@
 (defun update-x->cam (camera)
   (with-base-camera (in-space space) camera
     (setf (get-transform in-space space)
-	  (m4:m* (m4:translation (%camera-pos camera))
-		 (q:to-matrix4 (q:normalize (%camera-rot camera)))))))
+	  (m4:m* (m4:translation (v4:negate (%camera-pos camera)))
+		 (q:to-matrix4
+		  (q:normalize
+		   (%camera-rot camera)))))))
 
 (defun make-camera (&key
 		      (pos (v! 0 0 0 0))
 		      (rot (q:identity-quat))
-		      (viewport (jungl:current-viewport))
+		      (viewport (jungl:clone-viewport (jungl:current-viewport)))
 		      (in-space *world-space*)
 		      (projection :perspective)
 		      (near 1.0)
@@ -34,7 +36,7 @@
 		      (fov 120.0))
   (unless in-space
     (error "Cepl.Camera: Space is mandatory when constructing camera"))
-  (let ((cam (%make-camera :space (space! *clip-space* in-space)
+  (let ((cam (%make-camera :space (make-space* *clip-space* in-space)
 			   :perspective (ecase projection
 					  ((:perspective :p) t)
 					  ((:orthographic :ortho :o) nil))
@@ -78,7 +80,8 @@
 		     (error "Cannot render using this type as a camera: ~s" ,cam))))
 	 (let ((,space (cepl.camera.base::base-camera-space ,cam)))
 	   (with-rendering-via ,space
-	     ,@body))))))
+	     (jungl::with-viewport (cepl.camera.base::base-camera-viewport ,cam)
+	       ,@body)))))))
 
 (defmethod x->cam ((camera camera))
   (with-base-camera (space in-space) camera

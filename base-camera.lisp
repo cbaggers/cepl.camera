@@ -27,8 +27,8 @@
 			   (far 1000.0)
 			   (fov 120.0))
   (%make-base-camera :space (if in-space
-				(space! *clip-space* in-space)
-				(space! *clip-space*))
+				(make-space* *clip-space* in-space)
+				(make-space* *clip-space*))
 		     :perspective (ecase projection
 				    ((:perspective :p) t)
 				    ((:orthographic :ortho :o) nil))
@@ -55,14 +55,18 @@
     (let ((frame (jungl:viewport-resolution-v! viewport)))
       (setf (get-transform space *clip-space*)
 	    (if perspective
-		(cl-game-math.projection:perspective (v:x frame) (v:y frame)
+		(rtg-math.projection:perspective (v:x frame) (v:y frame)
 						     near far fov)
-		(cl-game-math.projection:orthographic (v:x frame) (v:y frame)
+		(rtg-math.projection:orthographic (v:x frame) (v:y frame)
 						      near far))))))
 
 
 (defmethod viewport ((camera base-camera))
   (base-camera-viewport camera))
+
+(defmethod (setf viewport) (value (camera base-camera))
+  (assert (typep value 'jungl:viewport))
+  (setf (base-camera-viewport camera) value))
 
 (defmethod cam->clip ((camera base-camera))
   (with-base-camera (space) camera

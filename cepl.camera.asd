@@ -5,7 +5,7 @@
   :author "Chris Bagley <techsnuffle@gmail.com>"
   :license "BSD 2 Clause"
   :serial t
-  :depends-on (#:cepl #:cl-game-math)
+  :depends-on (#:cepl #:rtg-math)
   :components ((:file "package")
 	       (:file "generics")
 	       (:file "base-camera")
