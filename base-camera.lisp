@@ -45,7 +45,7 @@
 		 slots))
   `(symbol-macrolet
        ,(mapcar (lambda (x)
-		  `(,x (,(utils:symb-package :cepl.camera.base :base-camera- x)
+		  `(,x (,(cepl-utils:symb-package :cepl.camera.base :base-camera- x)
 			 ,cam)))
 		slots)
      ,@body))
