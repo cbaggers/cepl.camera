@@ -9,7 +9,7 @@
 		   (:conc-name %camera-))
   (uid (incf *uids*) :type fixnum)
   (pos (v! 0 0 0 0) :type rtg-math.types:vec4)
-  (rot (q:identity-quat) :type rtg-math.types:quaternion))
+  (rot (q:identity) :type rtg-math.types:quaternion))
 
 (defmethod print-object ((cam camera) stream)
   (with-base-camera (perspective) cam
@@ -20,14 +20,14 @@
 (defun update-x->cam (camera)
   (with-base-camera (in-space space) camera
     (setf (get-transform in-space space)
-	  (m4:m* (m4:translation (v4:negate (%camera-pos camera)))
-		 (q:to-matrix4
+	  (m4:* (m4:translation (v4:negate (%camera-pos camera)))
+		 (q:to-mat4
 		  (q:normalize
 		   (%camera-rot camera)))))))
 
 (defun make-camera (&key
 		      (pos (v! 0 0 0 0))
-		      (rot (q:identity-quat))
+		      (rot (q:identity))
 		      (viewport (jungl:clone-viewport (jungl:current-viewport)))
 		      (in-space *world-space*)
 		      (projection :perspective)
