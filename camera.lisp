@@ -20,10 +20,11 @@
 (defun update-x->cam (camera)
   (with-base-camera (in-space space) camera
     (setf (get-transform in-space space)
-	  (m4:* (m4:translation (v4:negate (%camera-pos camera)))
-		 (q:to-mat4
-		  (q:normalize
-		   (%camera-rot camera)))))))
+	  (m4:* (q:to-mat4
+		 (q:normalize
+		  (q:inverse
+		   (%camera-rot camera))))
+		(m4:translation (v4:negate (%camera-pos camera)))))))
 
 (defun make-camera (&key
 		      (pos (v! 0 0 0 0))
