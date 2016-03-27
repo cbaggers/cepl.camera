@@ -11,16 +11,16 @@
 
 (defstruct (base-camera (:constructor %make-base-camera))
   (viewport (error "viewport must be supplied when making a camera")
-	    :type jungl:viewport)
+	    :type cepl:viewport)
   (space (error "CEPL: Bug in cepl, space not provided when space-camera was created")
-	 :type jungl.space:space)
+	 :type cepl.space:space)
   (perspective t :type boolean)
-  (in-space nil :type (or null jungl.space:space))
+  (in-space nil :type (or null cepl.space:space))
   (near 1.0 :type single-float)
   (far 1.0 :type single-float)
   (fov 120.0 :type single-float))
 
-(defun make-base-camera (&key (viewport (jungl:current-viewport))
+(defun make-base-camera (&key (viewport (cepl:current-viewport))
 			   (projection :perspective)
 			   (near 1.0)
 			   (in-space *world-space*)
@@ -52,7 +52,7 @@
 
 (defun update-cam->clip (base-camera)
   (with-base-camera (viewport space near far fov perspective) base-camera
-    (let ((frame (jungl:viewport-resolution-v! viewport)))
+    (let ((frame (cepl:viewport-resolution viewport)))
       (setf (get-transform space *clip-space*)
 	    (if perspective
 		(rtg-math.projection:perspective (v:x frame) (v:y frame)
@@ -65,7 +65,7 @@
   (base-camera-viewport camera))
 
 (defmethod (setf viewport) (value (camera base-camera))
-  (assert (typep value 'jungl:viewport))
+  (assert (typep value 'cepl:viewport))
   (setf (base-camera-viewport camera) value))
 
 (defmethod cam->clip ((camera base-camera))

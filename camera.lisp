@@ -29,7 +29,7 @@
 (defun make-camera (&key
 		      (pos (v! 0 0 0 0))
 		      (rot (q:identity))
-		      (viewport (jungl:clone-viewport (jungl:current-viewport)))
+		      (viewport (cepl:copy-viewport (cepl:current-viewport)))
 		      (in-space *world-space*)
 		      (projection :perspective)
 		      (near 1.0)
@@ -81,7 +81,7 @@
 		     (error "Cannot render using this type as a camera: ~s" ,cam))))
 	 (let ((,space (cepl.camera.base::base-camera-space ,cam)))
 	   (with-rendering-via ,space
-	     (jungl::with-viewport (cepl.camera.base::base-camera-viewport ,cam)
+	     (cepl::with-viewport (cepl.camera.base::base-camera-viewport ,cam)
 	       ,@body)))))))
 
 (defmethod x->cam ((camera camera))
