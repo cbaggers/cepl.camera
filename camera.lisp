@@ -80,7 +80,7 @@
 		 `((unless (typep ,cam 'camera)
 		     (error "Cannot render using this type as a camera: ~s" ,cam))))
 	 (let ((,space (cepl.camera.base::base-camera-space ,cam)))
-	   (with-rendering-via ,space
+	   (with-space-routing-via ,space
 	     (cepl::with-viewport (cepl.camera.base::base-camera-viewport ,cam)
 	       ,@body)))))))
 
