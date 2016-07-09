@@ -61,6 +61,9 @@
 						      near far))))))
 
 
+(defun camera-viewport (camera)
+  (base-camera-viewport camera))
+
 (defmethod viewport ((camera base-camera))
   (base-camera-viewport camera))
 
