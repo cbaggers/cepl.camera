@@ -65,7 +65,7 @@
   value)
 
 (defun (setf camera-rot) (value camera)
-  (setf (%camera-rot camera) value)
+  (setf (%camera-rot camera) (q:normalize value))
   (update-x->cam camera)
   (update-cam->clip camera)
   value)
