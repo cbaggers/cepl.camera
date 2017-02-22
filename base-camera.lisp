@@ -11,9 +11,9 @@
 
 (defstruct (base-camera (:constructor %make-base-camera))
   (viewport (error "viewport must be supplied when making a camera")
-	    :type viewport)
+            :type viewport)
   (space (error "CEPL: Bug in cepl, space not provided when space-camera was created")
-	 :type cepl.space:vec-space)
+         :type cepl.space:vec-space)
   (perspective t :type boolean)
   (in-space nil :type (or null cepl.space:vec-space))
   (near 1.0 :type single-float)
@@ -21,44 +21,44 @@
   (fov 120.0 :type single-float))
 
 (defun make-base-camera (&key (viewport (current-viewport))
-			   (projection :perspective)
-			   (near 1.0)
-			   (in-space *world-space*)
-			   (far 1000.0)
-			   (fov 120.0))
+                           (projection :perspective)
+                           (near 1.0)
+                           (in-space *world-space*)
+                           (far 1000.0)
+                           (fov 120.0))
   (%make-base-camera :space (if in-space
-				(make-space* *clip-space* in-space)
-				(make-space* *clip-space*))
-		     :perspective (ecase projection
-				    ((:perspective :p) t)
-				    ((:orthographic :ortho :o) nil))
-		     :in-space nil
-		     :viewport viewport
-		     :near near
-		     :far far
-		     :fov fov))
+                                (make-space* *clip-space* in-space)
+                                (make-space* *clip-space*))
+                     :perspective (ecase projection
+                                    ((:perspective :p) t)
+                                    ((:orthographic :ortho :o) nil))
+                     :in-space nil
+                     :viewport viewport
+                     :near near
+                     :far far
+                     :fov fov))
 
 (defmacro with-base-camera (slots cam &body body)
 
   (assert (every (lambda (x) (member x '(viewport space near far fov in-space
-					 perspective)))
-		 slots))
+                                         perspective)))
+                 slots))
   `(symbol-macrolet
        ,(mapcar (lambda (x)
-		  `(,x (,(cepl-utils:symb-package :cepl.camera.base :base-camera- x)
-			 ,cam)))
-		slots)
+                  `(,x (,(cepl-utils:symb-package :cepl.camera.base :base-camera- x)
+                         ,cam)))
+                slots)
      ,@body))
 
 (defun update-cam->clip (base-camera)
   (with-base-camera (viewport space near far fov perspective) base-camera
     (let ((frame (viewport-resolution viewport)))
       (setf (get-transform space *clip-space*)
-	    (if perspective
-		(rtg-math.projection:perspective (v:x frame) (v:y frame)
-						     near far fov)
-		(rtg-math.projection:orthographic (v:x frame) (v:y frame)
-						      near far))))))
+            (if perspective
+                (rtg-math.projection:perspective (v:x frame) (v:y frame)
+                                                 near far fov)
+                (rtg-math.projection:orthographic (v:x frame) (v:y frame)
+                                                  near far))))))
 
 
 (defun camera-viewport (camera)

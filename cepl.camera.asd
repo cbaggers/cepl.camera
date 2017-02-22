@@ -8,6 +8,6 @@
   :serial t
   :depends-on (#:cepl #:rtg-math)
   :components ((:file "package")
-	       (:file "generics")
-	       (:file "base-camera")
+               (:file "generics")
+               (:file "base-camera")
                (:file "camera")))
