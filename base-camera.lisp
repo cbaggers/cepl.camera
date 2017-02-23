@@ -60,7 +60,6 @@
                 (rtg-math.projection:orthographic (v:x frame) (v:y frame)
                                                   near far))))))
 
-
 (defun camera-viewport (camera)
   (base-camera-viewport camera))
 
@@ -74,3 +73,31 @@
 (defmethod cam->clip ((camera base-camera))
   (with-base-camera (space) camera
     (get-transform space *clip-space*)))
+
+(defun camera-dimensions (camera)
+  (cepl:viewport-dimensions (camera-viewport camera)))
+
+(defun camera-resolution (camera)
+  (cepl:viewport-resolution (camera-viewport camera)))
+
+(defun (setf camera-dimensions) (new-dimensions camera)
+  (prog1 (setf (cepl:viewport-dimensions (camera-viewport camera))
+               new-dimensions)
+    (update-cam->clip camera)))
+
+(defun (setf camera-resolution) (new-resolution-v2 camera)
+  (prog1 (setf (cepl:viewport-resolution (camera-viewport camera))
+               new-resolution-v2)
+    (update-cam->clip camera)))
+
+(defmethod resolution ((camera base-camera))
+  (camera-resolution camera))
+
+(defmethod (setf resolution) (value (camera base-camera))
+  (setf (camera-resolution camera) value))
+
+(defmethod dimensions ((camera base-camera))
+  (camera-dimensions camera))
+
+(defmethod (setf dimensions) (value (camera base-camera))
+  (setf (camera-dimensions camera) value))
