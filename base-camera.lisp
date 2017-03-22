@@ -40,14 +40,14 @@
 
 (defmacro with-base-camera (slots cam &body body)
   (assert (every (lambda (x)
-                   (member (intern (symbol-name x) :keyword)
-                           '(:viewport :space :near :far :fov :in-space :perspective)))
+                   (member x '(:viewport :space :near :far :fov :in-space :perspective)
+                           :test #'string=))
                  slots))
   `(symbol-macrolet
        ,(mapcar (lambda (x)
                   `(,x (,(cepl-utils:symb-package :cepl.camera.base :base-camera- x)
-                        ,cam)))
-         slots)
+                         ,cam)))
+                slots)
      ,@body))
 
 (defun update-cam->clip (base-camera)
