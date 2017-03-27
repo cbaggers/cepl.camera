@@ -39,9 +39,9 @@
                      :fov fov))
 
 (defmacro with-base-camera (slots cam &body body)
-
-  (assert (every (lambda (x) (member x '(viewport space near far fov in-space
-                                         perspective)))
+  (assert (every (lambda (x)
+                   (member x '(:viewport :space :near :far :fov :in-space :perspective)
+                           :test #'string=))
                  slots))
   `(symbol-macrolet
        ,(mapcar (lambda (x)
