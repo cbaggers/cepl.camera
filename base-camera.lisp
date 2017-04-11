@@ -18,7 +18,7 @@
   (in-space nil :type (or null cepl.space:vec-space))
   (near 1.0 :type single-float)
   (far 1.0 :type single-float)
-  (fov 120.0 :type single-float))
+  (fov 90.0 :type single-float))
 
 (defun make-base-camera (&key (viewport (current-viewport))
                            (projection :perspective)
@@ -59,6 +59,20 @@
                                                  near far fov)
                 (rtg-math.projection:orthographic (v:x frame) (v:y frame)
                                                   near far))))))
+
+(defun camera-fov (camera)
+  (base-camera-fov camera))
+
+(defmethod fov ((camera base-camera))
+  (base-camera-fov camera))
+
+(defun (setf camera-fov) (value camera)
+  (prog1 (setf (base-camera-fov camera) value)
+    (update-cam->clip camera)))
+
+(defmethod (setf fov) (value (camera base-camera))
+  (prog1 (setf (base-camera-fov camera) value)
+    (update-cam->clip camera)))
 
 (defun camera-viewport (camera)
   (base-camera-viewport camera))
