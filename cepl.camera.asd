@@ -6,7 +6,7 @@
   :license "BSD 2 Clause"
   #+asdf-unicode :encoding #+asdf-unicode :utf-8
   :serial t
-  :depends-on (#:cepl #:rtg-math)
+  :depends-on (#:cepl #:rtg-math #:cepl.spaces)
   :components ((:file "package")
                (:file "generics")
                (:file "base-camera")
