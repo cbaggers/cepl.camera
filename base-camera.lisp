@@ -63,6 +63,8 @@
 (defun camera-fov (camera)
   (base-camera-fov camera))
 
+(defgeneric fov (camera))
+
 (defmethod fov ((camera base-camera))
   (base-camera-fov camera))
 
