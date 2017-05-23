@@ -34,7 +34,7 @@
                       (projection :perspective)
                       (near 1.0)
                       (far 1000.0)
-                      (fov 120.0))
+                      (fov 60.0))
   (unless in-space
     (error "Cepl.Camera: Space is mandatory when constructing camera"))
   (let ((cam (%make-camera :space (make-space* *clip-space* in-space)
