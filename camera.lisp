@@ -8,7 +8,7 @@
                    (:constructor %make-camera)
                    (:conc-name %camera-))
   (uid (incf *uids*) :type fixnum)
-  (pos (v! 0 0 0 0) :type rtg-math.types:vec4)
+  (pos (v! 0 0 0) :type rtg-math.types:vec3)
   (rot (q:identity) :type rtg-math.types:quaternion))
 
 (defmethod print-object ((cam camera) stream)
@@ -24,10 +24,10 @@
                  (q:normalize
                   (q:inverse
                    (%camera-rot camera))))
-                (m4:translation (v4:negate (%camera-pos camera)))))))
+                (m4:translation (v3:negate (%camera-pos camera)))))))
 
 (defun make-camera (&key
-                      (pos (v! 0 0 0 0))
+                      (pos (v! 0 0 0))
                       (rot (q:identity))
                       (viewport (cepl:copy-viewport (cepl:current-viewport)))
                       (in-space *world-space*)
