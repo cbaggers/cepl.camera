@@ -64,6 +64,7 @@
   (base-camera-fov camera))
 
 (defgeneric fov (camera))
+(defgeneric (setf fov) (val camera))
 
 (defmethod fov ((camera base-camera))
   (base-camera-fov camera))
